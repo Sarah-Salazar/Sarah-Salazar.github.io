@@ -1,18 +1,812 @@
 <!DOCTYPE html>
 <html lang="en">
-
 <head>
-  <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>HTML5 Boilerplate</title>
-  <link rel="stylesheet" href="styles.css">
-</head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Keep it Simple: Network Vulnerability Game</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+            background-color: #f0f4f8;
+            color: #333;
+            margin: 0;
+            padding: 20px;
+            box-sizing: border-box;
+        }
 
+        h1 {
+            color: #2c3e50;
+            margin-bottom: 20px;
+            text-align: center;
+        }
+
+        .game-container {
+            background-color: #ffffff;
+            border-radius: 15px;
+            box-shadow: 0 8px 16px rgba(0, 0, 0, 0.1);
+            padding: 25px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            max-width: 900px;
+            width: 100%;
+            margin-bottom: 20px;
+        }
+
+        canvas {
+            border: 2px solid #a0aec0;
+            border-radius: 10px;
+            background-color: #e2e8f0;
+            display: block;
+            width: 100%; /* Make canvas responsive */
+            max-width: 800px; /* Max width for larger screens */
+            height: 500px; /* Fixed height, but could be responsive too */
+            margin-bottom: 20px;
+        }
+
+        .controls {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 15px;
+            justify-content: center;
+            margin-top: 15px;
+        }
+
+        button {
+            background-color: #4a90e2;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            padding: 12px 25px;
+            font-size: 1rem;
+            cursor: pointer;
+            transition: background-color 0.3s ease, transform 0.2s ease, box-shadow 0.3s ease;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+            font-weight: bold;
+        }
+
+        button:hover {
+            background-color: #357ABD;
+            transform: translateY(-2px);
+            box-shadow: 0 6px 12px rgba(0, 0, 0, 0.15);
+        }
+
+        button:active {
+            transform: translateY(0);
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+
+        button:disabled {
+            background-color: #cccccc;
+            cursor: not-allowed;
+            box-shadow: none;
+            transform: none;
+        }
+
+        .message-box {
+            background-color: #e0f2f7;
+            border: 1px solid #b3e0f2;
+            border-radius: 8px;
+            padding: 15px;
+            margin-top: 20px;
+            width: 100%;
+            max-width: 760px;
+            box-sizing: border-box;
+            font-size: 0.95rem;
+            line-height: 1.5;
+            color: #2d3748;
+            text-align: center;
+            min-height: 60px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .info-panel {
+            background-color: #f7fafc;
+            border: 1px solid #cbd5e0;
+            border-radius: 10px;
+            padding: 20px;
+            margin-top: 20px;
+            width: 100%;
+            max-width: 800px;
+            box-sizing: border-box;
+            text-align: left;
+        }
+
+        .info-panel h2 {
+            color: #2c3e50;
+            margin-top: 0;
+            margin-bottom: 10px;
+            font-size: 1.2rem;
+        }
+
+        .info-panel ul {
+            list-style-type: disc;
+            padding-left: 20px;
+            margin: 0;
+        }
+
+        .info-panel li {
+            margin-bottom: 5px;
+            color: #4a5568;
+        }
+
+        /* Responsive adjustments */
+        @media (max-width: 768px) {
+            .game-container {
+                padding: 15px;
+            }
+            canvas {
+                height: 400px;
+            }
+            .controls {
+                flex-direction: column;
+                gap: 10px;
+            }
+            button {
+                width: 100%;
+                padding: 10px 20px;
+            }
+            .message-box, .info-panel {
+                padding: 12px;
+            }
+        }
+
+        @media (max-width: 480px) {
+            h1 {
+                font-size: 1.5rem;
+            }
+            canvas {
+                height: 300px;
+            }
+            .info-panel h2 {
+                font-size: 1rem;
+            }
+        }
+    </style>
+</head>
 <body>
-  <h1>Sarah Salazar</h1>
-  <p>Welcome</p>
-  <script src="scripts.js"></script>
+    <h1>Keep it Simple: Network Vulnerability Simulation</h1>
+
+    <div class="game-container">
+        <canvas id="networkCanvas"></canvas>
+        <div class="controls">
+            <button id="removeBtn" disabled>Remove Selected</button>
+            <button id="explainRiskBtn" disabled>✨ Explain Risk</button>
+            <button id="resetBtn">Reset Network</button>
+            <button id="hintBtn">Get Hint</button>
+        </div>
+        <div id="messageBox" class="message-box">
+            Click on nodes or connections to select them. Then click "Remove Selected" to simplify the network!
+        </div>
+    </div>
+
+    <div class="info-panel">
+        <h2>Network Elements:</h2>
+        <ul>
+            <li><span style="color: #3498db; font-weight: bold;">User Device (Blue Circle):</span> Laptops, phones - essential for users.</li>
+            <li><span style="color: #6a93d0; font-weight: bold;">User Phone (Light Blue Circle):</span> Mobile devices used by users - essential.</li>
+            <li><span style="color: #27ae60; font-weight: bold;">Server (Green Square):</span> Stores data and runs applications - essential.</li>
+            <li><span style="color: #f39c12; font-weight: bold;">Firewall (Orange Diamond):</span> Protects the network - essential.</li>
+            <li><span style="color: #6aab7a; font-weight: bold;">Phishing Detection Software (Light Green Star):</span> Helps identify and block phishing attempts - essential.</li>
+            <li><span style="color: #e74c3c; font-weight: bold;">Unnecessary Add-on (Red Triangle):</span> Games, extra routers, pop-ups - these add complexity and vulnerability.</li>
+            <li><span style="color: #95a5a6; font-weight: bold;">Connection (Gray Line):</span> Links between devices. Redundant or unnecessary connections add risk.</li>
+        </ul>
+        <h2>Potential Security Risks:</h2>
+        <ul>
+            <li><span style="color: #e74c3c; font-weight: bold;">Malware/Virus:</span> Unnecessary software or downloads can introduce malicious code.</li>
+            <li><span style="color: #e74c3c; font-weight: bold;">Open Port:</span> Unnecessary network ports left open can be entry points for attackers.</li>
+            <li><span style="color: #e74c3c; font-weight: bold;">Unsecured Wi-Fi:</span> Connecting to untrusted networks without proper security can expose your devices.</li>
+            <li><span style="color: #e74c3c; font-weight: bold;">Excessive Data Sharing:</span> Unnecessary connections or sharing can lead to data breaches.</li>
+            <li><span style="color: #e74c3c; font-weight: bold;">Outdated Software:</span> Applications or operating systems with known vulnerabilities.</li>
+            <li><span style="color: #e74c3c; font-weight: bold;">Phishing Attempt:</span> Deceptive messages or websites designed to trick users into revealing sensitive information.</li>
+            <li><span style="color: #e74c3c; font-weight: bold;">Redundant Connections:</span> Too many paths can make it harder to monitor and secure.</li>
+        </ul>
+        <h2>Your Challenge:</h2>
+        <p>Inspect the tangled network. Identify and remove unnecessary devices or redundant connections to make the system more secure. A simpler system is easier to defend!</p>
+    </div>
+
+    <script>
+        const canvas = document.getElementById('networkCanvas');
+        const ctx = canvas.getContext('2d');
+        const removeBtn = document.getElementById('removeBtn');
+        const explainRiskBtn = document.getElementById('explainRiskBtn');
+        const resetBtn = document.getElementById('resetBtn');
+        const hintBtn = document.getElementById('hintBtn');
+        const messageBox = document.getElementById('messageBox');
+
+        let nodes = [];
+        let connections = [];
+        let selectedElement = null;
+        let unnecessaryCount = 0;
+
+        const NODE_RADIUS = 20;
+        const PHONE_RADIUS = 15;
+        const NODE_TYPES = {
+            USER_DEVICE: 'user_device',
+            USER_PHONE: 'user_phone',
+            SERVER: 'server',
+            FIREWALL: 'firewall',
+            UNNECESSARY_ADDON: 'unnecessary_addon',
+            MALWARE: 'malware',
+            OPEN_PORT: 'open_port',
+            UNSECURED_WIFI: 'unsecured_wifi',
+            OUTDATED_SOFTWARE: 'outdated_software',
+            PHISHING_ATTEMPT: 'phishing_attempt',
+            PHISHING_DETECTION_SOFTWARE: 'phishing_detection_software'
+        };
+
+        const NODE_COLORS = {
+            [NODE_TYPES.USER_DEVICE]: '#3498db',
+            [NODE_TYPES.USER_PHONE]: '#6a93d0',
+            [NODE_TYPES.SERVER]: '#27ae60',
+            [NODE_TYPES.FIREWALL]: '#f39c12',
+            [NODE_TYPES.UNNECESSARY_ADDON]: '#e74c3c',
+            [NODE_TYPES.MALWARE]: '#c0392b',
+            [NODE_TYPES.OPEN_PORT]: '#e67e22',
+            [NODE_TYPES.UNSECURED_WIFI]: '#9b59b6',
+            [NODE_TYPES.OUTDATED_SOFTWARE]: '#f1c40f',
+            [NODE_TYPES.PHISHING_ATTEMPT]: '#8e44ad',
+            [NODE_TYPES.PHISHING_DETECTION_SOFTWARE]: '#6aab7a'
+        };
+
+        const NODE_SHAPES = {
+            [NODE_TYPES.USER_DEVICE]: 'circle',
+            [NODE_TYPES.USER_PHONE]: 'circle',
+            [NODE_TYPES.SERVER]: 'square',
+            [NODE_TYPES.FIREWALL]: 'diamond',
+            [NODE_TYPES.UNNECESSARY_ADDON]: 'triangle',
+            [NODE_TYPES.MALWARE]: 'star',
+            [NODE_TYPES.OPEN_PORT]: 'hexagon',
+            [NODE_TYPES.UNSECURED_WIFI]: 'pentagon',
+            [NODE_TYPES.OUTDATED_SOFTWARE]: 'cross',
+            [NODE_TYPES.PHISHING_ATTEMPT]: 'exclamation',
+            [NODE_TYPES.PHISHING_DETECTION_SOFTWARE]: 'star'
+        };
+
+        // Function to display messages in the message box
+        function displayMessage(message, type = 'info') {
+            messageBox.textContent = message;
+            messageBox.style.backgroundColor = type === 'error' ? '#fde0dc' : (type === 'success' ? '#d4edda' : '#e0f2f7');
+            messageBox.style.borderColor = type === 'error' ? '#f5c6cb' : (type === 'success' ? '#c3e6cb' : '#b3e0f2');
+        }
+
+        // Function to generate a unique ID
+        function generateId() {
+            return '_' + Math.random().toString(36).substr(2, 9);
+        }
+
+        // Function to create a node
+        function createNode(type, x, y) {
+            const radius = (type === NODE_TYPES.USER_PHONE) ? PHONE_RADIUS : NODE_RADIUS;
+            return {
+                id: generateId(),
+                type: type,
+                x: x,
+                y: y,
+                radius: radius,
+                selected: false,
+                isUnnecessary: ![
+                    NODE_TYPES.USER_DEVICE,
+                    NODE_TYPES.USER_PHONE,
+                    NODE_TYPES.SERVER,
+                    NODE_TYPES.FIREWALL,
+                    NODE_TYPES.PHISHING_DETECTION_SOFTWARE
+                ].includes(type)
+            };
+        }
+
+        // Function to create a connection
+        function createConnection(fromNodeId, toNodeId, isRedundant = false) {
+            return {
+                id: generateId(),
+                from: fromNodeId,
+                to: toNodeId,
+                selected: false,
+                isRedundant: isRedundant
+            };
+        }
+
+        // Function to draw a node on the canvas
+        function drawNode(node) {
+            ctx.beginPath();
+            ctx.fillStyle = node.selected ? '#8e44ad' : NODE_COLORS[node.type];
+            ctx.strokeStyle = '#333';
+            ctx.lineWidth = 2;
+
+            const size = node.radius * 1.5;
+
+            if (NODE_SHAPES[node.type] === 'circle') {
+                ctx.arc(node.x, node.y, node.radius, 0, Math.PI * 2);
+                ctx.fill();
+                ctx.stroke();
+            } else if (NODE_SHAPES[node.type] === 'square') {
+                ctx.fillRect(node.x - size / 2, node.y - size / 2, size, size);
+                ctx.strokeRect(node.x - size / 2, node.y - size / 2, size, size);
+            } else if (NODE_SHAPES[node.type] === 'diamond') {
+                const diamondSize = node.radius * 1.8;
+                ctx.moveTo(node.x, node.y - diamondSize / 2);
+                ctx.lineTo(node.x + diamondSize / 2, node.y);
+                ctx.lineTo(node.x, node.y + diamondSize / 2);
+                ctx.lineTo(node.x - diamondSize / 2, node.y);
+                ctx.closePath();
+                ctx.fill();
+                ctx.stroke();
+            } else if (NODE_SHAPES[node.type] === 'triangle') {
+                const triangleSize = node.radius * 1.8;
+                ctx.moveTo(node.x, node.y - triangleSize / 2);
+                ctx.lineTo(node.x + triangleSize / 2, node.y + triangleSize / 2);
+                ctx.lineTo(node.x - triangleSize / 2, node.y + triangleSize / 2);
+                ctx.closePath();
+                ctx.fill();
+                ctx.stroke();
+            } else if (NODE_SHAPES[node.type] === 'star') {
+                const starRadius = node.radius * 1.2;
+                const innerRadius = starRadius / 2.5;
+                const spikes = 5;
+                let rot = Math.PI / 2 * 3;
+                let x = node.x;
+                let y = node.y;
+                let step = Math.PI / spikes;
+
+                ctx.moveTo(x, y - starRadius);
+                for (let i = 0; i < spikes; i++) {
+                    x = node.x + Math.cos(rot) * starRadius;
+                    y = node.y + Math.sin(rot) * starRadius;
+                    ctx.lineTo(x, y);
+                    rot += step;
+
+                    x = node.x + Math.cos(rot) * innerRadius;
+                    y = node.y + Math.sin(rot) * innerRadius;
+                    ctx.lineTo(x, y);
+                    rot += step;
+                }
+                ctx.closePath();
+                ctx.fill();
+                ctx.stroke();
+            } else if (NODE_SHAPES[node.type] === 'hexagon') {
+                const hexRadius = node.radius * 1.2;
+                for (let i = 0; i < 6; i++) {
+                    const angle = Math.PI / 3 * i;
+                    const x = node.x + hexRadius * Math.cos(angle);
+                    const y = node.y + hexRadius * Math.sin(angle);
+                    if (i === 0) ctx.moveTo(x, y);
+                    else ctx.lineTo(x, y);
+                }
+                ctx.closePath();
+                ctx.fill();
+                ctx.stroke();
+            } else if (NODE_SHAPES[node.type] === 'pentagon') {
+                const pentRadius = node.radius * 1.2;
+                for (let i = 0; i < 5; i++) {
+                    const angle = (Math.PI * 2 / 5) * i - Math.PI / 2;
+                    const x = node.x + pentRadius * Math.cos(angle);
+                    const y = node.y + pentRadius * Math.sin(angle);
+                    if (i === 0) ctx.moveTo(x, y);
+                    else ctx.lineTo(x, y);
+                }
+                ctx.closePath();
+                ctx.fill();
+                ctx.stroke();
+            } else if (NODE_SHAPES[node.type] === 'cross') {
+                const crossSize = node.radius * 1.5;
+                const armWidth = crossSize / 3;
+                ctx.fillRect(node.x - crossSize / 2, node.y - armWidth / 2, crossSize, armWidth);
+                ctx.fillRect(node.x - armWidth / 2, node.y - crossSize / 2, armWidth, crossSize);
+                ctx.strokeRect(node.x - crossSize / 2, node.y - armWidth / 2, crossSize, armWidth);
+                ctx.strokeRect(node.x - armWidth / 2, node.y - crossSize / 2, armWidth, crossSize);
+            } else if (NODE_SHAPES[node.type] === 'exclamation') {
+                const exclamSize = node.radius * 1.5;
+                ctx.font = `${exclamSize * 1.5}px Arial`;
+                ctx.textAlign = 'center';
+                ctx.textBaseline = 'middle';
+                ctx.fillStyle = '#fff';
+                ctx.fillText('!', node.x, node.y + exclamSize * 0.1);
+                ctx.strokeText('!', node.x, node.y + exclamSize * 0.1);
+            }
+
+
+            // Draw node type label
+            ctx.fillStyle = '#fff';
+            ctx.textAlign = 'center';
+            ctx.textBaseline = 'middle';
+            ctx.font = 'bold 9px Inter';
+            let label = '';
+            switch (node.type) {
+                case NODE_TYPES.USER_DEVICE: label = 'User'; break;
+                case NODE_TYPES.USER_PHONE: label = 'Phone'; break;
+                case NODE_TYPES.SERVER: label = 'Server'; break;
+                case NODE_TYPES.FIREWALL: label = 'FW'; break;
+                case NODE_TYPES.UNNECESSARY_ADDON: label = 'Add-on'; break;
+                case NODE_TYPES.MALWARE: label = 'Malware'; break;
+                case NODE_TYPES.OPEN_PORT: label = 'Open Port'; break;
+                case NODE_TYPES.UNSECURED_WIFI: label = 'Unsecured WiFi'; break;
+                case NODE_TYPES.OUTDATED_SOFTWARE: label = 'Outdated SW'; break;
+                case NODE_TYPES.PHISHING_ATTEMPT: label = 'Phishing'; break;
+                case NODE_TYPES.PHISHING_DETECTION_SOFTWARE: label = 'Phishing Detect'; break;
+            }
+            ctx.fillText(label, node.x, node.y);
+        }
+
+        // Function to draw a connection on the canvas
+        function drawConnection(connection) {
+            const fromNode = nodes.find(n => n.id === connection.from);
+            const toNode = nodes.find(n => n.id === connection.to);
+
+            if (!fromNode || !toNode) return;
+
+            ctx.beginPath();
+            ctx.strokeStyle = connection.selected ? '#8e44ad' : (connection.isRedundant ? '#e74c3c' : '#95a5a6');
+            ctx.lineWidth = connection.selected ? 4 : 2;
+            ctx.moveTo(fromNode.x, fromNode.y);
+            ctx.lineTo(toNode.x, toNode.y);
+            ctx.stroke();
+        }
+
+        // Function to draw the entire network
+        function drawNetwork() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+            // Draw connections first so nodes appear on top
+            connections.forEach(drawConnection);
+            nodes.forEach(drawNode);
+        }
+
+        // Function to initialize the network with complexity and risks
+        function initializeNetwork() {
+            nodes = [];
+            connections = [];
+            selectedElement = null;
+            unnecessaryCount = 0;
+            removeBtn.disabled = true;
+            explainRiskBtn.disabled = true;
+            displayMessage('Click on nodes or connections to select them. Then click "Remove Selected" to simplify the network!');
+
+            // Define canvas dimensions
+            const canvasWidth = canvas.width;
+            const canvasHeight = canvas.height;
+
+            // Create essential nodes
+            const user1 = createNode(NODE_TYPES.USER_DEVICE, Math.random() * canvasWidth * 0.2 + 50, Math.random() * canvasHeight * 0.3 + 50);
+            const user2 = createNode(NODE_TYPES.USER_DEVICE, Math.random() * canvasWidth * 0.2 + 50, Math.random() * canvasHeight * 0.7 + 50);
+            const server1 = createNode(NODE_TYPES.SERVER, Math.random() * canvasWidth * 0.4 + 200, Math.random() * canvasHeight * 0.5 + 50);
+            const firewall1 = createNode(NODE_TYPES.FIREWALL, Math.random() * canvasWidth * 0.6 + 100, Math.random() * canvasHeight * 0.2 + 50);
+            const server2 = createNode(NODE_TYPES.SERVER, Math.random() * canvasWidth * 0.7 + 50, Math.random() * canvasHeight * 0.7 + 50);
+
+            nodes.push(user1, user2, server1, firewall1, server2);
+
+            // Add user phones and connect them to user devices
+            const phone1 = createNode(NODE_TYPES.USER_PHONE, user1.x + 50, user1.y - 30);
+            const phone2 = createNode(NODE_TYPES.USER_PHONE, user2.x - 50, user2.y + 30);
+            nodes.push(phone1, phone2);
+            connections.push(
+                createConnection(user1.id, phone1.id, false),
+                createConnection(user2.id, phone2.id, false)
+            );
+
+            // Add Phishing Detection Software nodes and connect them to relevant nodes
+            const phishingDetect1 = createNode(NODE_TYPES.PHISHING_DETECTION_SOFTWARE, firewall1.x, firewall1.y + 70);
+            const phishingDetect2 = createNode(NODE_TYPES.PHISHING_DETECTION_SOFTWARE, server1.x - 70, server1.y);
+            nodes.push(phishingDetect1, phishingDetect2);
+            connections.push(
+                createConnection(firewall1.id, phishingDetect1.id, false),
+                createConnection(server1.id, phishingDetect2.id, false)
+            );
+
+
+            // Create more varied unnecessary add-ons and risks
+            const riskTypes = [
+                NODE_TYPES.UNNECESSARY_ADDON,
+                NODE_TYPES.MALWARE,
+                NODE_TYPES.OPEN_PORT,
+                NODE_TYPES.UNSECURED_WIFI,
+                NODE_TYPES.OUTDATED_SOFTWARE,
+                NODE_TYPES.PHISHING_ATTEMPT
+            ];
+            for (let i = 0; i < 15; i++) {
+                const type = riskTypes[Math.floor(Math.random() * riskTypes.length)];
+                const riskNode = createNode(type, Math.random() * (canvasWidth - 100) + 50, Math.random() * (canvasHeight - 100) + 50);
+                nodes.push(riskNode);
+                unnecessaryCount++;
+            }
+
+            // Create initial essential connections
+            connections.push(
+                createConnection(user1.id, firewall1.id),
+                createConnection(user2.id, firewall1.id),
+                createConnection(firewall1.id, server1.id),
+                createConnection(firewall1.id, server2.id)
+            );
+
+            // Create many unnecessary/redundant connections and link risky elements
+            for (let i = 0; i < 35; i++) {
+                const node1 = nodes[Math.floor(Math.random() * nodes.length)];
+                const node2 = nodes[Math.floor(Math.random() * nodes.length)];
+                if (node1.id !== node2.id) {
+                    const isRedundant = Math.random() > 0.2;
+                    connections.push(createConnection(node1.id, node2.id, isRedundant));
+                    if (isRedundant) unnecessaryCount++;
+                }
+            }
+
+            // Ensure some risky elements are connected to essential nodes
+            nodes.filter(n => n.isUnnecessary).forEach(riskNode => {
+                const essentialNode = nodes.filter(n => !n.isUnnecessary)[Math.floor(Math.random() * nodes.filter(n => !n.isUnnecessary).length)];
+                if (essentialNode) {
+                    connections.push(createConnection(riskNode.id, essentialNode.id, true));
+                    unnecessaryCount++;
+                }
+            });
+
+            drawNetwork();
+        }
+
+        // Function to deselect all elements
+        function deselectAll() {
+            nodes.forEach(node => node.selected = false);
+            connections.forEach(conn => conn.selected = false);
+        }
+
+        // Handle canvas click events for selection
+        canvas.addEventListener('click', (event) => {
+            const rect = canvas.getBoundingClientRect();
+            const scaleX = canvas.width / rect.width;
+            const scaleY = canvas.height / rect.height;
+            const mouseX = (event.clientX - rect.left) * scaleX;
+            const mouseY = (event.clientY - rect.top) * scaleY;
+
+            deselectAll(); // Deselect all elements first
+            selectedElement = null;
+            removeBtn.disabled = true;
+            explainRiskBtn.disabled = true;
+
+            let clickedOnElement = false;
+
+            // Check if a node was clicked
+            for (const node of nodes) {
+                const dist = Math.sqrt((mouseX - node.x)**2 + (mouseY - node.y)**2);
+                if (dist < node.radius) {
+                    node.selected = true;
+                    selectedElement = node;
+                    removeBtn.disabled = false;
+                    if (node.isUnnecessary) {
+                        explainRiskBtn.disabled = false;
+                    }
+
+                    // Highlight connections to this node
+                    connections.forEach(conn => {
+                        if (conn.from === node.id || conn.to === node.id) {
+                            conn.selected = true;
+                        }
+                    });
+
+                    displayMessage(`Selected: ${node.type.replace('_', ' ')}. Click "Remove Selected" to remove.`);
+                    clickedOnElement = true;
+                    break;
+                }
+            }
+
+            // If no node was clicked, check if a connection was clicked
+            if (!clickedOnElement) {
+                for (const conn of connections) {
+                    const fromNode = nodes.find(n => n.id === conn.from);
+                    const toNode = nodes.find(n => n.id === conn.to);
+
+                    if (!fromNode || !toNode) continue;
+
+                    // Simple line-point distance check (approximate for selection)
+                    const dist = distToSegmentSquared(
+                        { x: mouseX, y: mouseY },
+                        { x: fromNode.x, y: fromNode.y },
+                        { x: toNode.x, y: toNode.y }
+                    );
+                    const threshold = 100;
+                    if (dist < threshold) {
+                        conn.selected = true;
+                        selectedElement = conn;
+                        removeBtn.disabled = false;
+                        if (conn.isRedundant) {
+                            explainRiskBtn.disabled = false;
+                        }
+
+                        // Highlight nodes connected by this connection
+                        fromNode.selected = true;
+                        toNode.selected = true;
+
+                        displayMessage(`Selected: Connection between ${fromNode.type.replace('_', ' ')} and ${toNode.type.replace('_', ' ')}. Click "Remove Selected" to remove.`);
+                        clickedOnElement = true;
+                        break;
+                    }
+                }
+            }
+
+            if (!clickedOnElement) {
+                displayMessage('Click on nodes or connections to select them. Then click "Remove Selected" to simplify the network!');
+            }
+
+            drawNetwork();
+        });
+
+        // Helper function for distance from point to line segment
+        function distToSegmentSquared(p, v, w) {
+            const l2 = (w.x - v.x)**2 + (w.y - v.y)**2;
+            if (l2 === 0) return (p.x - v.x)**2 + (p.y - v.y)**2;
+            let t = ((p.x - v.x) * (w.x - v.x) + (p.y - v.y) * (w.y - v.y)) / l2;
+            t = Math.max(0, Math.min(1, t));
+            return (p.x - (v.x + t * (w.x - v.x)))**2 + (p.y - (v.y + t * (w.y - v.y)))**2;
+        }
+
+        // Handle remove button click
+        removeBtn.addEventListener('click', () => {
+            if (!selectedElement) {
+                displayMessage('Nothing selected to remove!', 'error');
+                return;
+            }
+
+            if (selectedElement.isUnnecessary || selectedElement.isRedundant) {
+                let removalMessage = '';
+                if (selectedElement.type) { // It's a node
+                    const nodeType = selectedElement.type;
+                    nodes = nodes.filter(n => n.id !== selectedElement.id);
+                    // Also remove any connections involving this node
+                    connections = connections.filter(c => c.from !== selectedElement.id && c.to !== selectedElement.id);
+                    unnecessaryCount--;
+
+                    switch (nodeType) {
+                        case NODE_TYPES.UNNECESSARY_ADDON:
+                            removalMessage = 'Removed an unnecessary add-on! This reduces the attack surface and makes the network easier to manage.';
+                            break;
+                        case NODE_TYPES.MALWARE:
+                            removalMessage = 'Removed Malware/Virus! This eliminates a direct threat that could compromise data or system integrity.';
+                            break;
+                        case NODE_TYPES.OPEN_PORT:
+                            removalMessage = 'Closed an Open Port! This removes an unauthorized entry point for attackers.';
+                            break;
+                        case NODE_TYPES.UNSECURED_WIFI:
+                            removalMessage = 'Disconnected from Unsecured Wi-Fi! This prevents potential eavesdropping and unauthorized access to your data.';
+                            break;
+                        case NODE_TYPES.OUTDATED_SOFTWARE:
+                            removalMessage = 'Removed Outdated Software! This eliminates known vulnerabilities that attackers could exploit.';
+                            break;
+                        case NODE_TYPES.PHISHING_ATTEMPT:
+                            removalMessage = 'Detected and removed a Phishing Attempt! This protects users from deceptive attacks designed to steal sensitive information.';
+                            break;
+                        default:
+                            removalMessage = `Removed a risky ${nodeType.replace('_', ' ')}! This improves overall network security.`;
+                    }
+                } else { // It's a connection
+                    connections = connections.filter(c => c.id !== selectedElement.id);
+                    unnecessaryCount--;
+                    removalMessage = 'Removed a redundant connection! This simplifies the network path, reduces potential points of failure, and makes monitoring easier.';
+                }
+                displayMessage(`${removalMessage} Remaining unnecessary items: ${unnecessaryCount}.`, 'success');
+
+                selectedElement = null;
+                removeBtn.disabled = true;
+                explainRiskBtn.disabled = true;
+                drawNetwork();
+                checkWinCondition();
+            } else {
+                if (selectedElement.type) {
+                    displayMessage(`You cannot remove essential network components like ${selectedElement.type.replace('_', ' ')}! Focus on add-ons and redundant paths.`, 'error');
+                } else {
+                    const fromNode = nodes.find(n => n.id === selectedElement.from);
+                    const toNode = nodes.find(n => n.id === selectedElement.to);
+                    displayMessage(`You cannot remove essential connections like the one between ${fromNode.type.replace('_', ' ')} and ${toNode.type.replace('_', ' ')}! Focus on add-ons and redundant paths.`, 'error');
+                }
+            }
+        });
+
+        // Handle explain risk button click
+        explainRiskBtn.addEventListener('click', async () => {
+            if (!selectedElement || (!selectedElement.isUnnecessary && !selectedElement.isRedundant)) {
+                displayMessage('Please select an unnecessary item or redundant connection to explain its risk.', 'error');
+                return;
+            }
+
+            displayMessage('Thinking... Please wait for the explanation.', 'info');
+            explainRiskBtn.disabled = true;
+
+            let prompt = '';
+            if (selectedElement.type) {
+                const nodeTypeName = selectedElement.type.replace('_', ' ');
+                prompt = `Explain in simple terms why a '${nodeTypeName}' in a computer network can be a security risk and how removing it improves network security. Keep the explanation concise and easy to understand for someone learning about cybersecurity.`;
+            } else {
+                const fromNode = nodes.find(n => n.id === selectedElement.from);
+                const toNode = nodes.find(n => n.id === selectedElement.to);
+                prompt = `Explain in simple terms why a redundant connection between a '${fromNode.type.replace('_', ' ')}' and a '${toNode.type.replace('_', ' ')}' in a computer network can be a security risk and how removing it improves network security. Keep the explanation concise and easy to understand for someone learning about cybersecurity.`;
+            }
+
+            try {
+                let chatHistory = [];
+                chatHistory.push({ role: "user", parts: [{ text: prompt }] });
+                const payload = { contents: chatHistory };
+                const apiKey = ""
+                const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${apiKey}`;
+                const response = await fetch(apiUrl, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload)
+                });
+                const result = await response.json();
+
+                if (result.candidates && result.candidates.length > 0 &&
+                    result.candidates[0].content && result.candidates[0].content.parts &&
+                    result.candidates[0].content.parts.length > 0) {
+                    const text = result.candidates[0].content.parts[0].text;
+                    displayMessage(`✨ Explanation: ${text}`, 'info');
+                } else {
+                    displayMessage('Could not get an explanation. Please try again.', 'error');
+                }
+            } catch (error) {
+                console.error('Error calling Gemini API:', error);
+                displayMessage('Error getting explanation. Check console for details.', 'error');
+            } finally {
+                if (selectedElement && (selectedElement.isUnnecessary || selectedElement.isRedundant)) {
+                    explainRiskBtn.disabled = false;
+                }
+            }
+        });
+
+        // Handle reset button click
+        resetBtn.addEventListener('click', () => {
+            initializeNetwork();
+            displayMessage('Network reset to its initial complex state. Start simplifying again!');
+        });
+
+        // Handle hint button click
+        hintBtn.addEventListener('click', () => {
+            const unnecessaryNodes = nodes.filter(n => n.isUnnecessary);
+            const redundantConnections = connections.filter(c => c.isRedundant);
+
+            if (unnecessaryNodes.length > 0) {
+                const hintNode = unnecessaryNodes[Math.floor(Math.random() * unnecessaryNodes.length)];
+                let hintMessage = `Hint: Look for a risky element like a '${hintNode.type.replace('_', ' ')}'. Removing it will improve security.`;
+                displayMessage(hintMessage);
+            } else if (redundantConnections.length > 0) {
+                const hintConn = redundantConnections[Math.floor(Math.random() * redundantConnections.length)];
+                const fromNode = nodes.find(n => n.id === hintConn.from);
+                const toNode = nodes.find(n => n.id === hintConn.to);
+                displayMessage(`Hint: Some connections are redundant (look for red lines). Removing them can simplify the network without breaking essential paths. For example, the connection between ${fromNode.type.replace('_', ' ')} and ${toNode.type.replace('_', ' ')}.`);
+            } else {
+                displayMessage('No more unnecessary items left! You\'ve done a great job simplifying the network.');
+            }
+        });
+
+        // Check for win condition
+        function checkWinCondition() {
+            if (unnecessaryCount <= 0) {
+                displayMessage('Congratulations! You\'ve successfully simplified the network by removing all unnecessary components and redundant connections. A simpler system is a more secure system!', 'success');
+                removeBtn.disabled = true;
+                hintBtn.disabled = true;
+                explainRiskBtn.disabled = true;
+            } else {
+                hintBtn.disabled = false;
+            }
+        }
+
+        // Adjust canvas size on window load and resize
+        function resizeCanvas() {
+            const container = canvas.parentElement;
+            canvas.width = container.clientWidth > 800 ? 800 : container.clientWidth;
+            canvas.height = 500;
+            drawNetwork();
+        }
+
+        // Initial setup
+        window.onload = function() {
+            resizeCanvas();
+            initializeNetwork();
+        };
+
+        window.addEventListener('resize', resizeCanvas);
+    </script>
 </body>
-<p>style.css</p>
-  <p>Untitled design (22).png</p>
 </html>
